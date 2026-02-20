@@ -29,4 +29,4 @@ jobs:
           # Removed the double underscore below
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         # Changed dash to underscore to match your script name
-        run: python job_search.py
+        run: python job-search.py
