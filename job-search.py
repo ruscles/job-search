@@ -1,21 +1,37 @@
 import datetime
 import requests
 import json
+import os
+import re
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
-# --- CONFIGURATION ---
+# --- CONFIGURATION (Pulls from GitHub Secrets or Local) ---
+SERPER_API_KEY = os.getenv("SERPER_API_KEY", "266d462d905f11e74e2f08c173e596059ed172be")
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID", "13sYJWO5WYp5QngXfQIRbgSQ0RnhVKfZP9Ct9pXU6onw")
 
-JSON_KEYFILE = "service_account_credentials.json"
-
-QUERY = 'site:lever.co | site:greenhouse.io | site:app.dover.io | site:jobs.ashbyhq.com "Engineering Manager" (Senior or Director) AND "Salary" (Remote) after:2024-10-02'
+def extract_company_name(url):
+    """Simple parser to get company name from ATS URLs."""
+    try:
+        url = url.lower().replace('https://', '').replace('http://', '').replace('www.', '')
+        if 'greenhouse.io' in url:
+            match = re.search(r'greenhouse\.io/([^/]+)', url)
+            return match.group(1).capitalize() if match else "Unknown"
+        elif 'lever.co' in url:
+            match = re.search(r'lever\.co/([^/]+)', url)
+            return match.group(1).capitalize() if match else "Unknown"
+        elif 'ashbyhq.com' in url:
+            match = re.search(r'ashbyhq\.com/([^/]+)', url)
+            return match.group(1).capitalize() if match else "Unknown"
+        return url.split('.')[0].capitalize()
+    except:
+        return "Manual Check"
 
 def get_search_results(query):
     url = "https://google.serper.dev/search"
     headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
     all_results = []
     
-    # Using the stable 'start' pagination to bypass the 31-result wall
     for start_index in [0, 10, 20]:
         payload = json.dumps({
             "q": query,
@@ -35,64 +51,60 @@ def get_search_results(query):
 
 def update_google_sheet(rows, tab_name):
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(JSON_KEYFILE, scope)
+    
+    # Auth Logic: GitHub vs Local Mac Mini
+    creds_json = os.environ.get('GOOGLE_CREDENTIALS')
+    if creds_json:
+        creds_info = json.loads(creds_json)
+        creds = ServiceAccountCredentials.from_json_dict(creds_info, scope)
+    else:
+        # Fallback to local file for your Mac Mini
+        creds = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+        
     service = build('sheets', 'v4', credentials=creds)
 
-    # Check existing links in Column D (previously C, shifted for new Platform col)
-    range_name = f"{tab_name}!D:D"
+    # Link is now in Column E (index 4) because we added Company
+    range_name = f"{tab_name}!E:E"
     try:
-        sheet_data = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range=range_name).execute()
-        existing_links = [item[0] for item in sheet_data.get('values', []) if item]
+        result = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range=range_name).execute()
+        existing_links = [item[0] for item in result.get('values', []) if item]
     except:
         existing_links = []
 
-    new_rows = [r for r in rows if r[3] not in existing_links]
+    # Check against Link (index 4)
+    new_rows = [r for r in rows if r[4] not in existing_links]
 
     if new_rows:
-        append_range = f"{tab_name}!A1"
         service.spreadsheets().values().append(
             spreadsheetId=SPREADSHEET_ID,
-            range=append_range,
+            range=f"{tab_name}!A1",
             valueInputOption="USER_ENTERED",
             body={'values': new_rows}
         ).execute()
         print(f"✅ Added {len(new_rows)} jobs to {tab_name}.")
 
 def main():
-    # Organized by 'Apply Difficulty'
-    startup_ats = ["lever.co", "greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "rippling.com"]
-    enterprise_ats = ["myworkdayjobs.com", "smartrecruiters.com", "jobvite.com", "bamboohr.com"]
-    niche_boards = ["wellfound.com", "weworkremotely.com", "builtin.com"]
+    sites = ["lever.co", "greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "myworkdayjobs.com"]
     
-    all_sites = startup_ats + enterprise_ats + niche_boards
-
     jobs_to_search = [
-        {
-            "tab": "EM",
-            "query": '("Engineering Manager" OR "Sr. Engineering Manager" OR "Director of Engineering") AND "Salary" (Remote) after:2026-01-01'
-        },
-        {
-            "tab": "PM",
-            "query": '("Product Manager" OR "Sr. Product Manager" OR "Staff PM" OR "Group PM" OR "Director of Product") AND "Salary" (Remote) after:2026-01-01'
-        }
+        {"tab": "EM", "query": '("Engineering Manager" OR "Director of Engineering") AND "Salary" (Remote) after:2026-01-01'},
+        {"tab": "PM", "query": '("Product Manager" OR "Director of Product") AND "Salary" (Remote) after:2026-01-01'}
     ]
 
     for job_type in jobs_to_search:
-        print(f"\n--- Scanning for {job_type['tab']} Roles ---")
+        print(f"\n--- Scanning {job_type['tab']} ---")
         tab_data = []
-        
-        for site in all_sites:
-            full_query = f"site:{site} {job_type['query']}"
-            print(f"Checking {site}...")
-            results = get_search_results(full_query)
-            
+        for site in sites:
+            results = get_search_results(f"site:{site} {job_type['query']}")
             for item in results:
-                # Column Logic: Date | Platform | Title | Link | Snippet
+                link = item.get('link')
+                # Date | Company | Platform | Title | Link | Snippet
                 tab_data.append([
                     datetime.date.today().strftime("%Y-%m-%d"),
-                    site.split('.')[0], # Simplified Platform Name
+                    extract_company_name(link),
+                    site.split('.')[0],
                     item.get('title'),
-                    item.get('link'),
+                    link,
                     item.get('snippet')
                 ])
         
