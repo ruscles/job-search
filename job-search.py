@@ -112,10 +112,10 @@ def update_google_sheet(rows, tab_name):
         print(f"ℹ️ No new jobs found for {tab_name} (all results already exist).")
 
 def main():
-    sites = ["lever.co", "greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "myworkdayjobs.com"]
+    sites = ["lever.co", "greenhouse.io", "job-boards.greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "myworkdayjobs.com"]
     
     jobs_to_search = [
-        {"tab": "EM", "query": '("* Engineering Manager" OR "* Director of Engineering" OR "Head of Engineering") AND "Salary" (Remote) after:2026-01-01'},
+        {"tab": "EM", "query": '("* Engineering Manager" OR "Director of Engineering") ("Compensation" OR "Benefits") (Remote) -hybrid -canada -paris -kenya -EMEA -APAC after:2026-01-01'},
         {"tab": "PM", "query": '("Product Manager" OR "Director of Product") AND "Salary" (Remote) after:2026-01-01'}
     ]
 
