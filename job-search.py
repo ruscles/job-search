@@ -72,7 +72,7 @@ def update_google_sheet(rows, tab_name):
     creds_json = os.environ.get('GOOGLE_CREDENTIALS')
     if creds_json:
         creds_info = json.loads(creds_json)
-        creds = ServiceAccountCredentials.from_json_dict(creds_info, scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope)
     else:
         # Fallback to local file for your Mac Mini
         creds = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
