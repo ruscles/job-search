@@ -1,21 +1,25 @@
+import os
 import datetime
 import requests
 import json
-import os
 import re
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Try to load local variables if they exist
-if os.path.exists("variables.env"):
-    load_dotenv("variables.env")
-    print("✅ Local environment loaded.")
-elif os.path.exists(".env"):
-    load_dotenv(".env")
-    print("✅ Local .env loaded.")
-else:
-    print("ℹ️ No local env file found. Relying on System/GitHub Secrets.")
+# --- SAFE DOTENV LOADING ---
+try:
+    from dotenv import load_dotenv
+    # Look for your specific file
+    if os.path.exists("variables.env"):
+        load_dotenv("variables.env")
+    elif os.path.exists(".env"):
+        load_dotenv()
+    print("✅ Dotenv processed (Local mode)")
+except ImportError:
+    # This will happen on GitHub Actions because we didn't install python-dotenv there
+    print("ℹ️ python-dotenv not found. Proceeding with System Environment Variables.")
 
+# Now it is safe to pull the variables
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 
