@@ -28,4 +28,4 @@ jobs:
           SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
           GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS__ }}
-        run: python your_script_name.py
+        run: python job-search.py
