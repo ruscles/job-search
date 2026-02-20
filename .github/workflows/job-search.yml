@@ -2,9 +2,8 @@ name: Job Search Automation
 
 on:
   schedule:
-    # This runs at 14:00 UTC (9:00 AM EST) every day
     - cron: '0 14 * * *'
-  workflow_dispatch: # This allows you to run it manually with a button click
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,12 +20,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-api-python-client oauth2client requests
+          pip install google-api-python-client oauth2client requests python-dotenv
 
       - name: Run search script
         env:
-          # This connects your GitHub Secrets to the script's environment
           SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS__ }}
-        run: python job-search.py
+          # Removed the double underscore below
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        # Changed dash to underscore to match your script name
+        run: python job_search.py
