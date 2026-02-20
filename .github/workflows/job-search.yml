@@ -1,0 +1,30 @@
+name: Daily Job Hunt
+on:
+  schedule:
+    # This runs at 14:00 UTC (9:00 AM EST) every day
+    - cron: '0 14 * * *'
+  workflow_dispatch: # Allows you to run it manually with a button click
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install google-api-python-client oauth2client requests
+
+      - name: Run search script
+        env:
+          # We store your keys in GitHub Secrets for safety
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          # You'll need to pass your service_account.json differently or as a secret
+        run: python job-search.py

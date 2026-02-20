@@ -1,0 +1,25 @@
+# Credentials and Secrets (IMPORTANT)
+.env
+*.json
+*.pem
+*.key
+secrets.py
+auth.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node.js (if you're using it)
+node_modules/
+npm-debug.log*
+
+# Python (if you're using it)
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# IDE settings
+.vscode/
+.idea/
