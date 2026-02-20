@@ -5,13 +5,22 @@ import os
 import re
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
-from dotenv import load_dotenv
 
-load_dotenv()
+# --- SMART CONFIGURATION ---
+# This block allows the script to run on your Mac (with dotenv) 
+# OR on GitHub (without dotenv) without crashing.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ Local .env detected and loaded.")
+except ImportError:
+    print("ℹ️ python-dotenv not installed. Using system environment variables (GitHub Mode).")
 
-# --- CONFIGURATION (Pulls from GitHub Secrets or Local) ---
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+
+if not SERPER_API_KEY:
+    print("❌ ERROR: SERPER_API_KEY not found in environment!")
 
 def extract_company_name(url):
     """Simple parser to get company name from ATS URLs."""
