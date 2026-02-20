@@ -6,15 +6,15 @@ import re
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 
-# --- SMART CONFIGURATION ---
-# This block allows the script to run on your Mac (with dotenv) 
-# OR on GitHub (without dotenv) without crashing.
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-    print("✅ Local .env detected and loaded.")
-except ImportError:
-    print("ℹ️ python-dotenv not installed. Using system environment variables (GitHub Mode).")
+# Try to load local variables if they exist
+if os.path.exists("variables.env"):
+    load_dotenv("variables.env")
+    print("✅ Local environment loaded.")
+elif os.path.exists(".env"):
+    load_dotenv(".env")
+    print("✅ Local .env loaded.")
+else:
+    print("ℹ️ No local env file found. Relying on System/GitHub Secrets.")
 
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
