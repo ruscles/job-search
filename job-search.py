@@ -128,7 +128,7 @@ def main():
                 link = item.get('link')
                 # Date | Company | Platform | Title | Link | Snippet
                 tab_data.append([
-                    datetime.date.today().strftime("%Y-%m-%d"),
+                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                     extract_company_name(link),
                     site.split('.')[0],
                     item.get('title'),

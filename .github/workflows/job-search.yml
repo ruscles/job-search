@@ -2,7 +2,8 @@ name: Job Search Automation
 
 on:
   schedule:
-    - cron: '0 14 * * *'
+    # 14:00 (9am EST) and 19:00 (2pm EST), Monday through Friday
+    - cron: '0 14,19 * * 1-5'
   workflow_dispatch:
 
 jobs:
