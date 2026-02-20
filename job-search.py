@@ -5,6 +5,7 @@ import json
 import re
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
+import datetime
 
 # --- SAFE DOTENV LOADING ---
 try:
@@ -114,8 +115,14 @@ def update_google_sheet(rows, tab_name):
 def main():
     sites = ["lever.co", "greenhouse.io", "job-boards.greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "myworkdayjobs.com"]
     
+    # Calculate the date 14 days ago
+    two_weeks_ago = (datetime.datetime.now() - datetime.timedelta(days=14)).strftime('%Y-%m-%d')
+    query_date = f"after:{two_weeks_ago}"
+
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+
     jobs_to_search = [
-        {"tab": "EM", "query": '("* Engineering Manager" OR "Director of Engineering") ("Compensation" OR "Benefits") (Remote) after:2026-02-01'},
+        {"tab": "EM", "query": f'("* Engineering Manager" OR "Director of Engineering") ("Compensation" OR "Benefits") (Remote) {query_date}'},
         {"tab": "PM", "query": '("Product Manager" OR "Director of Product") AND "Salary" (Remote) after:2026-01-01'}
     ]
 
@@ -128,7 +135,7 @@ def main():
                 link = item.get('link')
                 # Date | Company | Platform | Title | Link | Snippet
                 tab_data.append([
-                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    current_time,
                     extract_company_name(link),
                     site.split('.')[0],
                     item.get('title'),
