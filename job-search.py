@@ -115,7 +115,7 @@ def main():
     sites = ["lever.co", "greenhouse.io", "job-boards.greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "myworkdayjobs.com"]
     
     jobs_to_search = [
-        {"tab": "EM", "query": '("* Engineering Manager" OR "Director of Engineering") ("Compensation" OR "Benefits") (Remote) -hybrid -canada -paris -kenya -EMEA -APAC after:2026-01-01'},
+        {"tab": "EM", "query": '("* Engineering Manager" OR "Director of Engineering") ("Compensation" OR "Benefits") (Remote) after:2026-02-01'},
         {"tab": "PM", "query": '("Product Manager" OR "Director of Product") AND "Salary" (Remote) after:2026-01-01'}
     ]
 
