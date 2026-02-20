@@ -68,36 +68,48 @@ def get_search_results(query):
 def update_google_sheet(rows, tab_name):
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     
-    # Auth Logic: GitHub vs Local Mac Mini
     creds_json = os.environ.get('GOOGLE_CREDENTIALS')
     if creds_json:
         creds_info = json.loads(creds_json)
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope)
     else:
-        # Fallback to local file for your Mac Mini
         creds = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
         
     service = build('sheets', 'v4', credentials=creds)
 
-    # Link is now in Column E (index 4) because we added Company
-    range_name = f"{tab_name}!E:E"
+    # 1. Get all existing links from Column E (to avoid duplicates)
+    # We use A:Z to make sure we're looking at the whole sheet context if needed
     try:
-        result = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range=range_name).execute()
-        existing_links = [item[0] for item in result.get('values', []) if item]
-    except:
+        result = service.spreadsheets().values().get(
+            spreadsheetId=SPREADSHEET_ID, 
+            range=f"{tab_name}!E:E"
+        ).execute()
+        # Flatten the list and strip whitespace
+        existing_links = [item[0].strip() for item in result.get('values', []) if item]
+    except Exception as e:
+        print(f"Note: Could not fetch existing links for {tab_name} (Sheet might be empty).")
         existing_links = []
 
-    # Check against Link (index 4)
-    new_rows = [r for r in rows if r[4] not in existing_links]
+    # 2. Filter out jobs we already have (Check index 4 which is the Link)
+    new_rows = []
+    for row in rows:
+        link = row[4].strip()
+        if link not in existing_links:
+            new_rows.append(row)
+            existing_links.append(link) # Prevent duplicates within the same run
 
+    # 3. Append only the truly new rows
     if new_rows:
         service.spreadsheets().values().append(
             spreadsheetId=SPREADSHEET_ID,
-            range=f"{tab_name}!A1",
+            range=f"{tab_name}!A1", # 'A1' tells Google to find the next available row automatically
             valueInputOption="USER_ENTERED",
+            insertDataOption="INSERT_ROWS", # This ensures we don't overwrite
             body={'values': new_rows}
         ).execute()
-        print(f"✅ Added {len(new_rows)} jobs to {tab_name}.")
+        print(f"✅ Added {len(new_rows)} NEW jobs to {tab_name}.")
+    else:
+        print(f"ℹ️ No new jobs found for {tab_name} (all results already exist).")
 
 def main():
     sites = ["lever.co", "greenhouse.io", "ashbyhq.com", "app.dover.io", "apply.workable.com", "myworkdayjobs.com"]
