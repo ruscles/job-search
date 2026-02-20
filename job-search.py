@@ -7,17 +7,11 @@ from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv
 
-print(f"Current Working Directory: {os.getcwd()}")
-print(f"Files in this folder: {os.listdir('.')}")
-
 load_dotenv()
-print(f"SERPER_API_KEY from .env: {os.getenv('SERPER_API_KEY')}")
 
 # --- CONFIGURATION (Pulls from GitHub Secrets or Local) ---
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
-
-print(f"DEBUG: Key found? {bool(SERPER_API_KEY)}")
 
 def extract_company_name(url):
     """Simple parser to get company name from ATS URLs."""

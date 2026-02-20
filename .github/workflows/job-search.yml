@@ -20,7 +20,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install google-api-python-client oauth2client requests
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run search script
         env:
